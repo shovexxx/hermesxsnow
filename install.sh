@@ -2,11 +2,17 @@
 # HermesXSnow installer — copies plugin.js into your Hermes desktop-plugins folder.
 set -euo pipefail
 
-SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PLUGIN_SRC="$SRC_DIR/plugin.js"
-
-# If piped via curl (no local plugin.js), download it.
-if [[ ! -f "$PLUGIN_SRC" ]]; then
+# Resolve the plugin source: prefer a local plugin.js next to this script
+# (clone install); fall back to downloading it (piped `curl | bash` install).
+PLUGIN_SRC=""
+SCRIPT_PATH="${BASH_SOURCE[0]:-}"
+if [[ -n "$SCRIPT_PATH" && "$SCRIPT_PATH" != "-" ]]; then
+  SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+  if [[ -f "$SCRIPT_DIR/plugin.js" ]]; then
+    PLUGIN_SRC="$SCRIPT_DIR/plugin.js"
+  fi
+fi
+if [[ -z "$PLUGIN_SRC" ]]; then
   PLUGIN_SRC="$(mktemp)"
   curl -fsSL https://raw.githubusercontent.com/shovexxx/hermesxsnow/main/plugin.js -o "$PLUGIN_SRC"
 fi
